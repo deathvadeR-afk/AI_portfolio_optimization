@@ -1,0 +1,397 @@
+# ============================================================================
+# MAIN CONFIGURATION FILE
+# ============================================================================
+# This is the master configuration file that imports and coordinates all
+# other configuration files. It provides a single entry point for configuring
+# the entire portfolio optimization system.
+#
+# Author: Portfolio Optimization Team
+# Last Updated: 2025-07-10
+# ============================================================================
+
+# =============================================================================
+# PROJECT METADATA
+# =============================================================================
+project:
+  name: "Multi-Asset Portfolio Optimization with RL"
+  version: "1.0.0"
+  description: "Reinforcement learning-based portfolio optimization system"
+  author: "Portfolio Optimization Team"
+  created_date: "2025-07-10"
+  
+  # Project directories
+  directories:
+    data: "data"
+    models: "models"
+    logs: "logs"
+    results: "results"
+    cache: "cache"
+
+# =============================================================================
+# CONFIGURATION IMPORTS
+# =============================================================================
+# Import settings from other configuration files
+imports:
+  # Data collection and processing configuration
+  data_config: "data_config.yaml"
+  
+  # Environment configuration for RL training
+  env_config: "env_config.yaml"
+  
+  # RL agent configuration and hyperparameters
+  agent_config: "agent_config.yaml"
+  
+  # Training pipeline configuration
+  training_config: "training_config.yaml"
+  
+  # Backtesting configuration
+  backtest_config: "backtest_config.yaml"
+
+# =============================================================================
+# EXECUTION MODES
+# =============================================================================
+# Define different execution modes for the system
+modes:
+  # Data collection mode
+  collect_data:
+    description: "Collect and preprocess market data"
+    config_files: ["data_config.yaml"]
+    entry_point: "scripts.collect_data"
+    
+  # Training mode
+  train:
+    description: "Train RL agent for portfolio optimization"
+    config_files: ["data_config.yaml", "env_config.yaml", "agent_config.yaml", "training_config.yaml"]
+    entry_point: "scripts.train"
+    
+  # Backtesting mode
+  backtest:
+    description: "Backtest trained strategy"
+    config_files: ["data_config.yaml", "env_config.yaml", "backtest_config.yaml"]
+    entry_point: "scripts.backtest"
+    
+  # Live trading mode (future implementation)
+  live_trade:
+    description: "Execute live trading with trained model"
+    config_files: ["data_config.yaml", "env_config.yaml", "live_config.yaml"]
+    entry_point: "scripts.live_trade"
+    enabled: false
+    
+  # Dashboard mode
+  dashboard:
+    description: "Launch interactive dashboard"
+    config_files: ["data_config.yaml", "backtest_config.yaml"]
+    entry_point: "app.dashboard.app"
+    
+  # API mode
+  api:
+    description: "Launch REST API server"
+    config_files: ["data_config.yaml", "env_config.yaml"]
+    entry_point: "app.api.main"
+
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+global:
+  # Random seed for reproducibility across all components
+  seed: 42
+  
+  # Logging configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+  # Timezone for all operations
+  timezone: "UTC"
+  
+  # Default currency
+  currency: "USD"
+  
+  # Performance settings
+  performance:
+    # Number of CPU cores to use (null for auto-detection)
+    n_cores: null
+    
+    # Enable parallel processing where possible
+    parallel_processing: true
+    
+    # Memory limit (in GB)
+    memory_limit_gb: 16
+    
+    # Enable caching
+    enable_caching: true
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+# Map configuration values to environment variables
+environment_variables:
+  # API Keys
+  FRED_API_KEY: "fred_api_key"
+  ALPHA_VANTAGE_API_KEY: "alpha_vantage_api_key"
+  
+  # Database settings
+  DATABASE_URL: "database_url"
+  REDIS_URL: "redis_url"
+  
+  # Storage paths
+  DATA_PATH: "data_path"
+  MODEL_PATH: "model_path"
+  LOG_PATH: "log_path"
+  
+  # Training settings
+  TRAINING_DEVICE: "training_device"
+  BATCH_SIZE: "batch_size"
+  LEARNING_RATE: "learning_rate"
+  
+  # Deployment settings
+  API_HOST: "api_host"
+  API_PORT: "api_port"
+  DEBUG_MODE: "debug_mode"
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+# Define validation rules for configuration values
+validation:
+  # Required fields that must be present
+  required_fields:
+    - "project.name"
+    - "project.version"
+    - "global.seed"
+    
+  # Value constraints
+  constraints:
+    # Seed must be a positive integer
+    "global.seed":
+      type: "integer"
+      min: 0
+      max: 2147483647
+    
+    # Memory limit must be positive
+    "global.performance.memory_limit_gb":
+      type: "number"
+      min: 1
+      max: 1024
+    
+    # Learning rate must be in valid range
+    "agent.ppo.learning_rate":
+      type: "number"
+      min: 1e-6
+      max: 1e-1
+    
+    # Portfolio initial capital must be positive
+    "environment.initial_balance":
+      type: "number"
+      min: 1000
+    
+    # Transaction costs must be non-negative
+    "environment.transaction_cost":
+      type: "number"
+      min: 0
+      max: 0.1
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+# Enable/disable experimental features
+features:
+  # Experimental features (disabled by default)
+  experimental:
+    # Advanced neural network architectures
+    advanced_networks: false
+    
+    # Multi-objective optimization
+    multi_objective: false
+    
+    # Regime-aware training
+    regime_aware: false
+    
+    # Alternative data sources
+    alternative_data: false
+  
+  # Beta features (use with caution)
+  beta:
+    # Hyperparameter optimization
+    hyperparameter_optimization: true
+    
+    # Advanced risk metrics
+    advanced_risk_metrics: true
+    
+    # Real-time data streaming
+    real_time_streaming: false
+  
+  # Stable features (production ready)
+  stable:
+    # Basic RL training
+    basic_training: true
+    
+    # Standard backtesting
+    standard_backtesting: true
+    
+    # Web dashboard
+    web_dashboard: true
+    
+    # REST API
+    rest_api: true
+
+# =============================================================================
+# DEPLOYMENT CONFIGURATION
+# =============================================================================
+deployment:
+  # Development environment
+  development:
+    debug: true
+    log_level: "DEBUG"
+    auto_reload: true
+    
+  # Staging environment
+  staging:
+    debug: false
+    log_level: "INFO"
+    auto_reload: false
+    
+  # Production environment
+  production:
+    debug: false
+    log_level: "WARNING"
+    auto_reload: false
+    enable_monitoring: true
+    enable_alerts: true
+
+# =============================================================================
+# INTEGRATION SETTINGS
+# =============================================================================
+integrations:
+  # Database integrations
+  databases:
+    # PostgreSQL for structured data
+    postgresql:
+      enabled: false
+      host: "localhost"
+      port: 5432
+      database: "portfolio_optimization"
+    
+    # Redis for caching
+    redis:
+      enabled: false
+      host: "localhost"
+      port: 6379
+      database: 0
+    
+    # InfluxDB for time series data
+    influxdb:
+      enabled: false
+      host: "localhost"
+      port: 8086
+      database: "market_data"
+  
+  # External APIs
+  apis:
+    # Yahoo Finance (free)
+    yahoo_finance:
+      enabled: true
+      rate_limit: 2000  # requests per hour
+    
+    # FRED API (free with registration)
+    fred:
+      enabled: true
+      rate_limit: 120   # requests per minute
+    
+    # Alpha Vantage (freemium)
+    alpha_vantage:
+      enabled: false
+      rate_limit: 5     # requests per minute (free tier)
+  
+  # Monitoring and alerting
+  monitoring:
+    # Prometheus metrics
+    prometheus:
+      enabled: false
+      port: 9090
+    
+    # Grafana dashboards
+    grafana:
+      enabled: false
+      port: 3000
+    
+    # Email alerts
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+    
+    # Slack notifications
+    slack:
+      enabled: false
+      webhook_url: null
+
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
+security:
+  # API security
+  api:
+    # Enable authentication
+    enable_auth: false
+    
+    # JWT settings
+    jwt:
+      secret_key: null  # Set via environment variable
+      expiry_hours: 24
+    
+    # Rate limiting
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 60
+  
+  # Data encryption
+  encryption:
+    # Encrypt sensitive data at rest
+    encrypt_at_rest: false
+    
+    # Encryption algorithm
+    algorithm: "AES-256"
+  
+  # Access control
+  access_control:
+    # Enable role-based access control
+    enable_rbac: false
+    
+    # Default user role
+    default_role: "viewer"
+
+# =============================================================================
+# MAINTENANCE AND CLEANUP
+# =============================================================================
+maintenance:
+  # Automatic cleanup settings
+  cleanup:
+    # Clean old log files
+    logs:
+      enabled: true
+      retention_days: 30
+    
+    # Clean old model checkpoints
+    checkpoints:
+      enabled: true
+      max_checkpoints: 10
+    
+    # Clean cache files
+    cache:
+      enabled: true
+      retention_days: 7
+  
+  # Backup settings
+  backup:
+    # Enable automatic backups
+    enabled: false
+    
+    # Backup frequency
+    frequency: "daily"  # daily, weekly, monthly
+    
+    # Backup retention
+    retention_days: 90
+    
+    # Backup location
+    location: "backups/"

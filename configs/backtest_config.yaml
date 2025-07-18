@@ -1,0 +1,530 @@
+# ============================================================================
+# BACKTESTING CONFIGURATION
+# ============================================================================
+# This file contains all settings for backtesting portfolio optimization
+# strategies. It defines test periods, benchmarks, performance metrics,
+# and reporting options.
+#
+# Author: Portfolio Optimization Team
+# Last Updated: 2025-07-10
+# ============================================================================
+
+# =============================================================================
+# GENERAL BACKTESTING SETTINGS
+# =============================================================================
+backtest:
+  # Name of the backtesting run (for identification and logging)
+  name: "portfolio_optimization_backtest"
+
+  # Description of the backtesting strategy
+  description: "RL-based portfolio optimization strategy backtesting"
+
+  # Random seed for reproducible results
+  seed: 42
+
+  # Whether to run in verbose mode (detailed logging)
+  verbose: true
+
+# =============================================================================
+# TIME PERIODS CONFIGURATION
+# =============================================================================
+# Define different periods for training, validation, and testing
+periods:
+  # Training period (for model development)
+  # This data is used to train the RL agent
+  train:
+    start_date: "2018-01-01"
+    end_date: "2022-12-31"
+    description: "Training period for model development"
+
+  # Validation period (for hyperparameter tuning)
+  # This data is used for model selection and hyperparameter optimization
+  validation:
+    start_date: "2023-01-01"
+    end_date: "2023-12-31"
+    description: "Validation period for model selection"
+
+  # Test period (for final evaluation)
+  # This data is used for unbiased performance evaluation
+  test:
+    start_date: "2024-01-01"
+    end_date: "2024-12-31"
+    description: "Out-of-sample test period"
+
+  # Walk-forward analysis periods
+  # For time-series cross-validation
+  walk_forward:
+    # Length of each training window (in months)
+    train_window_months: 36
+
+    # Length of each test window (in months)
+    test_window_months: 6
+
+    # Step size for moving the window (in months)
+    step_months: 3
+
+    # Minimum number of observations required
+    min_observations: 252  # 1 year of daily data
+
+# =============================================================================
+# PORTFOLIO SETTINGS
+# =============================================================================
+portfolio:
+  # Initial portfolio value
+  initial_capital: 100000.0
+
+  # Currency for the portfolio
+  currency: "USD"
+
+  # Transaction costs
+  transaction_costs:
+    # Fixed cost per transaction
+    fixed_cost: 0.0
+
+    # Proportional cost (as fraction of trade value)
+    # 0.001 = 0.1% = 10 basis points
+    proportional_cost: 0.001
+
+    # Minimum transaction cost
+    min_cost: 0.0
+
+    # Maximum transaction cost
+    max_cost: null
+
+  # Rebalancing settings
+  rebalancing:
+    # Rebalancing frequency
+    # Options: "daily", "weekly", "monthly", "quarterly", "threshold"
+    frequency: "monthly"
+
+    # Threshold-based rebalancing
+    # Rebalance when any weight deviates by more than this amount
+    threshold: 0.05  # 5%
+
+    # Minimum time between rebalances (in days)
+    min_rebalance_days: 1
+
+    # Whether to rebalance on the last day of the period
+    rebalance_on_close: true
+
+# =============================================================================
+# BENCHMARK STRATEGIES
+# =============================================================================
+# Define benchmark strategies to compare against
+benchmarks:
+  # Buy and hold S&P 500
+  sp500:
+    name: "S&P 500 Buy & Hold"
+    type: "buy_and_hold"
+    assets: ["^GSPC"]
+    weights: [1.0]
+    description: "Simple buy and hold S&P 500 strategy"
+
+  # Traditional 60/40 portfolio
+  sixty_forty:
+    name: "60/40 Portfolio"
+    type: "static_allocation"
+    assets: ["^GSPC", "TLT"]  # S&P 500 and 20+ Year Treasury
+    weights: [0.6, 0.4]
+    rebalancing: "monthly"
+    description: "Traditional 60% stocks, 40% bonds portfolio"
+
+  # Equal weight portfolio
+  equal_weight:
+    name: "Equal Weight Portfolio"
+    type: "equal_weight"
+    assets: null  # Will use same assets as strategy
+    rebalancing: "monthly"
+    description: "Equal weight allocation across all assets"
+
+  # Risk parity portfolio
+  risk_parity:
+    name: "Risk Parity"
+    type: "risk_parity"
+    assets: null  # Will use same assets as strategy
+    rebalancing: "monthly"
+    lookback_window: 252  # 1 year for volatility estimation
+    description: "Risk parity allocation based on inverse volatility"
+
+  # Mean reversion strategy
+  mean_reversion:
+    name: "Mean Reversion"
+    type: "mean_reversion"
+    assets: null  # Will use same assets as strategy
+    lookback_window: 20
+    rebalancing: "weekly"
+    description: "Mean reversion strategy based on price deviations"
+
+# =============================================================================
+# PERFORMANCE METRICS
+# =============================================================================
+# Define which performance metrics to calculate and report
+metrics:
+  # Return metrics
+  returns:
+    # Total return over the period
+    total_return: true
+
+    # Annualized return
+    annual_return: true
+
+    # Compound Annual Growth Rate (CAGR)
+    cagr: true
+
+    # Monthly returns
+    monthly_returns: true
+
+    # Rolling returns (specify windows in days)
+    rolling_returns: [30, 90, 252]
+
+  # Risk metrics
+  risk:
+    # Volatility (annualized)
+    volatility: true
+
+    # Downside deviation
+    downside_deviation: true
+
+    # Value at Risk (VaR)
+    var:
+      enabled: true
+      confidence_levels: [0.95, 0.99]
+      window: 252
+
+    # Expected Shortfall (Conditional VaR)
+    expected_shortfall:
+      enabled: true
+      confidence_levels: [0.95, 0.99]
+      window: 252
+
+    # Maximum drawdown
+    max_drawdown: true
+
+    # Average drawdown
+    avg_drawdown: true
+
+    # Drawdown duration
+    drawdown_duration: true
+
+  # Risk-adjusted metrics
+  risk_adjusted:
+    # Sharpe ratio (risk-free rate defined below)
+    sharpe_ratio: true
+
+    # Sortino ratio
+    sortino_ratio: true
+
+    # Calmar ratio (CAGR / Max Drawdown)
+    calmar_ratio: true
+
+    # Information ratio (vs benchmark)
+    information_ratio: true
+
+    # Treynor ratio
+    treynor_ratio: false  # Requires beta calculation
+
+    # Jensen's alpha
+    jensen_alpha: false   # Requires beta calculation
+
+  # Other metrics
+  other:
+    # Win rate (percentage of positive periods)
+    win_rate: true
+
+    # Profit factor
+    profit_factor: true
+
+    # Skewness of returns
+    skewness: true
+
+    # Kurtosis of returns
+    kurtosis: true
+
+    # Tail ratio
+    tail_ratio: true
+
+    # Portfolio turnover
+    turnover: true
+
+# =============================================================================
+# RISK-FREE RATE SETTINGS
+# =============================================================================
+risk_free_rate:
+  # Source of risk-free rate data
+  # Options: "constant", "fred", "treasury"
+  source: "constant"
+
+  # Constant risk-free rate (annual)
+  constant_rate: 0.02  # 2%
+
+  # FRED series for risk-free rate (if source is "fred")
+  fred_series: "DGS3MO"  # 3-Month Treasury Rate
+
+  # Treasury maturity (if source is "treasury")
+  treasury_maturity: "3M"  # 3-month, 6-month, 1Y, 2Y, 5Y, 10Y, 30Y
+
+# =============================================================================
+# REPORTING AND OUTPUT
+# =============================================================================
+reporting:
+  # Output directory for backtest results
+  output_dir: "results/backtests"
+
+  # Report formats to generate
+  formats:
+    # HTML report with interactive charts
+    html: true
+
+    # PDF report for presentations
+    pdf: false
+
+    # Excel file with detailed data
+    excel: true
+
+    # JSON file with raw results
+    json: true
+
+    # CSV files for further analysis
+    csv: true
+
+  # Charts and visualizations to include
+  charts:
+    # Cumulative returns chart
+    cumulative_returns: true
+
+    # Rolling Sharpe ratio
+    rolling_sharpe: true
+
+    # Drawdown chart
+    drawdown: true
+
+    # Monthly returns heatmap
+    monthly_heatmap: true
+
+    # Asset allocation over time
+    allocation_over_time: true
+
+    # Risk metrics over time
+    risk_over_time: true
+
+    # Correlation matrix
+    correlation_matrix: true
+
+    # Return distribution histogram
+    return_distribution: true
+
+  # Summary statistics to include
+  summary:
+    # Performance summary table
+    performance_table: true
+
+    # Risk metrics table
+    risk_table: true
+
+    # Benchmark comparison table
+    benchmark_comparison: true
+
+    # Monthly/yearly returns table
+    period_returns: true
+
+    # Transaction summary
+    transaction_summary: true
+
+# =============================================================================
+# STRESS TESTING
+# =============================================================================
+# Test portfolio performance under various stress scenarios
+stress_testing:
+  # Whether to run stress tests
+  enabled: true
+
+  # Historical stress scenarios
+  historical_scenarios:
+    # 2008 Financial Crisis
+    financial_crisis_2008:
+      start_date: "2007-10-01"
+      end_date: "2009-03-31"
+      description: "2008 Financial Crisis period"
+
+    # COVID-19 Market Crash
+    covid_crash_2020:
+      start_date: "2020-02-01"
+      end_date: "2020-05-31"
+      description: "COVID-19 market crash and recovery"
+
+    # Dot-com Bubble Burst
+    dotcom_crash:
+      start_date: "2000-03-01"
+      end_date: "2002-10-31"
+      description: "Dot-com bubble burst"
+
+  # Monte Carlo stress testing
+  monte_carlo:
+    # Whether to run Monte Carlo simulations
+    enabled: true
+
+    # Number of simulation runs
+    n_simulations: 1000
+
+    # Simulation period (in days)
+    simulation_days: 252
+
+    # Confidence levels for reporting
+    confidence_levels: [0.05, 0.95]
+
+  # Scenario analysis
+  scenarios:
+    # Market crash scenario
+    market_crash:
+      # Percentage drop in equity markets
+      equity_drop: -0.30
+
+      # Percentage change in bond markets
+      bond_change: 0.10
+
+      # Percentage change in commodities
+      commodity_change: -0.15
+
+      # Duration of scenario (in days)
+      duration: 30
+
+    # High inflation scenario
+    high_inflation:
+      # Percentage drop in bonds
+      bond_drop: -0.20
+
+      # Percentage increase in commodities
+      commodity_increase: 0.25
+
+      # Percentage change in equities
+      equity_change: -0.10
+
+      # Duration of scenario (in days)
+      duration: 90
+
+# =============================================================================
+# ADVANCED ANALYSIS
+# =============================================================================
+advanced_analysis:
+  # Attribution analysis
+  attribution:
+    # Whether to perform attribution analysis
+    enabled: true
+
+    # Attribution methods
+    methods:
+      - "brinson"      # Brinson attribution
+      - "factor"       # Factor-based attribution
+
+    # Factors for factor attribution
+    factors:
+      - "market"       # Market factor
+      - "size"         # Size factor (SMB)
+      - "value"        # Value factor (HML)
+      - "momentum"     # Momentum factor
+
+  # Regime analysis
+  regime_analysis:
+    # Whether to analyze performance by market regime
+    enabled: true
+
+    # Regime detection method
+    method: "volatility"  # "volatility", "returns", "hmm"
+
+    # Volatility thresholds for regime classification
+    volatility_thresholds:
+      low: 0.10    # Below 10% volatility = low vol regime
+      high: 0.25   # Above 25% volatility = high vol regime
+
+  # Sensitivity analysis
+  sensitivity:
+    # Whether to perform sensitivity analysis
+    enabled: true
+
+    # Parameters to test sensitivity for
+    parameters:
+      - "transaction_costs"
+      - "rebalancing_frequency"
+      - "lookback_window"
+
+    # Range of values to test (as multipliers of base value)
+    test_range: [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+
+# =============================================================================
+# VALIDATION AND ROBUSTNESS
+# =============================================================================
+validation:
+  # Cross-validation settings
+  cross_validation:
+    # Whether to perform cross-validation
+    enabled: true
+
+    # Type of cross-validation
+    # Options: "time_series", "purged", "embargo"
+    method: "time_series"
+
+    # Number of folds
+    n_folds: 5
+
+    # Gap between train and test (in days)
+    gap_days: 30
+
+  # Bootstrap analysis
+  bootstrap:
+    # Whether to perform bootstrap analysis
+    enabled: true
+
+    # Number of bootstrap samples
+    n_samples: 1000
+
+    # Bootstrap method
+    # Options: "stationary", "circular", "moving_block"
+    method: "stationary"
+
+    # Block size for block bootstrap
+    block_size: 30
+
+  # Robustness checks
+  robustness:
+    # Test with different start dates
+    start_date_sensitivity: true
+
+    # Test with different asset universes
+    asset_universe_sensitivity: true
+
+    # Test with different data frequencies
+    frequency_sensitivity: false
+
+# =============================================================================
+# EXECUTION AND PERFORMANCE
+# =============================================================================
+execution:
+  # Parallel processing settings
+  parallel:
+    # Whether to use parallel processing
+    enabled: true
+
+    # Number of processes (null for auto-detection)
+    n_processes: null
+
+    # Chunk size for parallel processing
+    chunk_size: 100
+
+  # Caching settings
+  caching:
+    # Whether to cache intermediate results
+    enabled: true
+
+    # Cache directory
+    cache_dir: "cache/backtests"
+
+    # Cache expiry (in days)
+    expiry_days: 30
+
+  # Memory management
+  memory:
+    # Maximum memory usage (in GB)
+    max_memory_gb: 8
+
+    # Whether to use memory mapping for large datasets
+    use_memory_mapping: true

@@ -1,0 +1,112 @@
+PORTFOLIO STRATEGY COMPARISON REPORT
+============================================================
+
+PERFORMANCE SUMMARY
+------------------------------
+Strategy       Return    Sharpe  Success   MaxDD   Vol     
+----------------------------------------------------------------------
+equal_weight     -0.27%   -0.06   45.0%   4.48%  16.17%
+momentum         -1.65%   -2.01   15.0%   3.09%   8.26%
+mean_reversion    9.55%    2.14  100.0%   4.54%  41.25%
+risk_parity      -1.83%   -0.73   40.0%   5.49%  17.22%
+random           -1.15%   -0.64   50.0%   5.14%  16.70%
+
+
+STRATEGY RANKINGS
+--------------------
+
+Mean Return:
+  1. mean_reversion
+  2. equal_weight
+  3. random
+  4. momentum
+  5. risk_parity
+
+Mean Sharpe:
+  1. mean_reversion
+  2. equal_weight
+  3. random
+  4. risk_parity
+  5. momentum
+
+Success Rate:
+  1. mean_reversion
+  2. random
+  3. equal_weight
+  4. risk_parity
+  5. momentum
+
+Mean Max Drawdown:
+  1. momentum
+  2. equal_weight
+  3. mean_reversion
+  4. random
+  5. risk_parity
+
+Mean Volatility:
+  1. momentum
+  2. equal_weight
+  3. random
+  4. risk_parity
+  5. mean_reversion
+
+Overall:
+  1. equal_weight
+  2. mean_reversion
+  3. random
+  4. momentum
+  5. risk_parity
+
+
+DETAILED STATISTICS
+-------------------------
+
+EQUAL_WEIGHT:
+  Episodes: 20
+  Mean Return: -0.27% ± 3.94%
+  Best Return: 5.94%
+  Worst Return: -10.48%
+  Mean Sharpe: -0.06
+  Mean Max Drawdown: 4.48%
+  Mean Volatility: 16.17%
+  Success Rate: 45.0%
+
+MOMENTUM:
+  Episodes: 20
+  Mean Return: -1.65% ± 1.80%
+  Best Return: 1.66%
+  Worst Return: -5.35%
+  Mean Sharpe: -2.01
+  Mean Max Drawdown: 3.09%
+  Mean Volatility: 8.26%
+  Success Rate: 15.0%
+
+MEAN_REVERSION:
+  Episodes: 20
+  Mean Return: 9.55% ± 3.48%
+  Best Return: 19.83%
+  Worst Return: 4.00%
+  Mean Sharpe: 2.14
+  Mean Max Drawdown: 4.54%
+  Mean Volatility: 41.25%
+  Success Rate: 100.0%
+
+RISK_PARITY:
+  Episodes: 20
+  Mean Return: -1.83% ± 4.30%
+  Best Return: 5.30%
+  Worst Return: -10.81%
+  Mean Sharpe: -0.73
+  Mean Max Drawdown: 5.49%
+  Mean Volatility: 17.22%
+  Success Rate: 40.0%
+
+RANDOM:
+  Episodes: 20
+  Mean Return: -1.15% ± 5.64%
+  Best Return: 7.14%
+  Worst Return: -20.19%
+  Mean Sharpe: -0.64
+  Mean Max Drawdown: 5.14%
+  Mean Volatility: 16.70%
+  Success Rate: 50.0%
