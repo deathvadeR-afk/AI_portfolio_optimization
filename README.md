@@ -65,7 +65,7 @@ A comprehensive, production-ready portfolio optimization system featuring advanc
 
 1. **Clone the repository:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/deathvadeR-afk/AI_portfolio_optimization.git
 cd portfolio_optimization_project
 ```
 
