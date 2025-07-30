@@ -1,0 +1,55 @@
+# RL Agent Configuration
+
+# PPO Agent parameters
+ppo:
+  lr_actor: 3e-4
+  lr_critic: 1e-3
+  gamma: 0.99
+  eps_clip: 0.2
+  k_epochs: 4
+  hidden_dim: 256
+  update_frequency: 2000
+  
+# Network architecture
+network:
+  actor:
+    hidden_layers: [256, 256]
+    activation: "relu"
+    output_activation: "softmax"
+  critic:
+    hidden_layers: [256, 256]
+    activation: "relu"
+    output_activation: "linear"
+
+# Training parameters
+training:
+  batch_size: 32
+  buffer_size: 10000
+  learning_starts: 1000
+  train_frequency: 4
+  target_update_frequency: 1000
+  gradient_steps: 1
+  
+# Exploration
+exploration:
+  initial_eps: 1.0
+  final_eps: 0.05
+  eps_decay: 0.995
+  noise_std: 0.1
+
+# Regularization
+regularization:
+  l2_reg: 1e-4
+  dropout: 0.0
+  gradient_clip: 0.5
+
+# Device configuration
+device:
+  use_cuda: true
+  cuda_deterministic: false
+  
+# Checkpointing
+checkpoint:
+  save_frequency: 1000
+  keep_best: true
+  keep_last_n: 5

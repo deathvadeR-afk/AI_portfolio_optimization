@@ -1,0 +1,46 @@
+# RL Training Configuration
+
+experiment_name: "ppo_portfolio"
+
+# Data configuration
+data:
+  path: "data"
+  validation_split: 0.2
+
+# Environment configuration
+env:
+  initial_balance: 100000.0
+  transaction_cost: 0.001
+  lookback_window: 30
+  episode_length: 100
+  reward_function: "sharpe"  # sharpe, return, sortino
+  action_processor: "continuous"  # continuous, discrete
+  max_position_size: 0.3
+  min_position_size: 0.0
+  include_features: true
+
+# Agent configuration
+agent:
+  lr_actor: 3e-4
+  lr_critic: 1e-3
+  gamma: 0.99
+  eps_clip: 0.2
+  k_epochs: 4
+  hidden_dim: 256
+  device: "auto"  # auto, cpu, cuda
+
+# Training configuration
+training:
+  total_episodes: 1000
+  save_frequency: 100
+  eval_frequency: 50
+  update_frequency: 2000
+  warmup_episodes: 100
+  patience: 200
+  target_return: 0.12
+
+# Logging configuration
+logging:
+  level: "INFO"
+  save_logs: true
+  log_frequency: 10

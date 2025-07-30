@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Portfolio Optimization Dashboard</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-connected { background-color: var(--success-color); }
+        .status-error { background-color: var(--danger-color); }
+        .status-loading { background-color: var(--warning-color); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Card Styles */
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .metric-card .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Metric Display */
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive { color: var(--success-color); }
+        .metric-change.negative { color: var(--danger-color); }
+
+        /* Button Styles */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            min-height: 300px;
+            margin: 1rem 0;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.375rem;
+        }
+
+        .chart-container canvas {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Portfolio Allocation */
+        .allocation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .allocation-item:last-child {
+            border-bottom: none;
+        }
+
+        .allocation-bar {
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .allocation-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #3b82f6);
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1rem 0;
+            }
+            
+            .metric-value {
+                font-size: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="fas fa-chart-line me-3"></i>
+                        AI Portfolio Optimization Dashboard
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">
+                        Advanced portfolio management powered by reinforcement learning
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex align-items-center justify-content-end mb-2">
+                        <span class="status-indicator status-loading" id="apiStatus"></span>
+                        <span id="apiStatusText" class="me-3">Connecting...</span>
+                        <button class="btn btn-outline-light btn-sm" onclick="refreshData()">
+                            <i class="fas fa-sync-alt" id="refreshIcon"></i>
+                        </button>
+                    </div>
+                    <small id="lastUpdate" class="opacity-75">Last updated: --</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Connection Status Alert -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info" id="connectionAlert">
+                    <i class="fas fa-wifi me-2"></i>
+                    <span id="connectionMessage">Testing API connection...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-value text-primary" id="totalValue">$0</div>
+                        <div class="metric-label">Total Portfolio Value</div>
+                        <div class="metric-change" id="totalValueChange">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-value text-success" id="totalReturn">0.00%</div>
+                        <div class="metric-label">Total Return</div>
+                        <div class="metric-change" id="totalReturnChange">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-value text-warning" id="sharpeRatio">0.00</div>
+                        <div class="metric-label">Sharpe Ratio</div>
+                        <div class="metric-change" id="sharpeRatioChange">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-value text-danger" id="maxDrawdown">0.00%</div>
+                        <div class="metric-label">Max Drawdown</div>
+                        <div class="metric-change" id="maxDrawdownChange">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Row -->
+        <div class="row">
+            <!-- Portfolio Optimization Panel -->
+            <div class="col-lg-8 mb-4">
+                <div class="metric-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>
+                            AI Portfolio Optimization
+                        </h5>
+                        <button class="btn btn-primary btn-sm" onclick="optimizePortfolio()">
+                            <i class="fas fa-magic me-2"></i>Optimize
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Optimization Controls -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Initial Balance</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="initialBalance" value="100000">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Risk Tolerance</label>
+                                <select class="form-select" id="riskTolerance">
+                                    <option value="conservative">Conservative</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="aggressive">Aggressive</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Investment Horizon</label>
+                                <select class="form-select" id="investmentHorizon">
+                                    <option value="7">1 Week</option>
+                                    <option value="30" selected>1 Month</option>
+                                    <option value="90">3 Months</option>
+                                    <option value="365">1 Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Selection -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Optimization Strategy</label>
+                                <select class="form-select" id="optimizationStrategy">
+                                    <option value="rl_ppo">🤖 AI-Powered (Reinforcement Learning)</option>
+                                    <option value="mean_reversion" selected>📈 Mean Reversion</option>
+                                    <option value="momentum">🚀 Momentum</option>
+                                    <option value="risk_parity">⚖️ Risk Parity</option>
+                                </select>
+                                <div class="form-text" id="strategyDescription">
+                                    Exploits price reversions to historical means - best for volatile markets
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Asset Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">Select Assets</label>
+                            <div class="row" id="assetSelection">
+                                <!-- Asset checkboxes will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Optimization Results -->
+                        <div id="optimizationResults">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-chart-pie fa-3x mb-3 opacity-50"></i>
+                                <p>Click "Optimize" to generate AI-powered portfolio recommendations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="col-lg-4">
+                <!-- Current Allocation -->
+                <div class="metric-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-pie-chart me-2"></i>
+                            Current Allocation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="currentAllocation">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-chart-pie fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">No allocation data</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Alerts -->
+                <div class="metric-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Risk Alerts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="riskAlerts">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-shield-alt fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">No active alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations -->
+                <div class="metric-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            AI Recommendations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="aiRecommendations">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-robot fa-2x mb-2 opacity-50"></i>
+                                <p class="mb-0">Analyzing market conditions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart Row -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="metric-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Portfolio Performance
+                        </h5>
+                        <div class="d-flex align-items-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary active" onclick="changeTimeframe('1M')">1M</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="changeTimeframe('3M')">3M</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="changeTimeframe('6M')">6M</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="changeTimeframe('1Y')">1Y</button>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary ms-2" onclick="generateSampleChartData()" title="Refresh Chart">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-warning ms-1" onclick="createSimpleChart()" title="Force Chart Creation">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" id="chartContainer">
+                            <canvas id="performanceChart" width="800" height="300"></canvas>
+                        </div>
+                        <div id="chartStatus" class="text-center text-muted mt-2">
+                            <small>Initializing chart...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Signals Row -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="metric-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-signal me-2"></i>
+                            Trading Signals
+                        </h5>
+                        <button class="btn btn-primary btn-sm" onclick="getTradingSignals()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Signals
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="tradingSignals">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-signal fa-3x mb-3 opacity-50"></i>
+                                <p>Click "Refresh Signals" to get latest AI trading recommendations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+
+        // Global state
+        let isConnected = false;
+        let currentPortfolio = null;
+        let performanceChart = null;
+        let availableAssets = [
+            'GSPC', 'TLT', 'GLD', 'BTC_USD', 'VNQ', 'EFA', 'EEM', 'IWM', 'QQQ', 'SPY'
+        ];
+
+        // DOM elements
+        const elements = {
+            apiStatus: document.getElementById('apiStatus'),
+            apiStatusText: document.getElementById('apiStatusText'),
+            connectionAlert: document.getElementById('connectionAlert'),
+            connectionMessage: document.getElementById('connectionMessage'),
+            lastUpdate: document.getElementById('lastUpdate'),
+            refreshIcon: document.getElementById('refreshIcon'),
+
+            // Metrics
+            totalValue: document.getElementById('totalValue'),
+            totalReturn: document.getElementById('totalReturn'),
+            sharpeRatio: document.getElementById('sharpeRatio'),
+            maxDrawdown: document.getElementById('maxDrawdown'),
+
+            // Controls
+            initialBalance: document.getElementById('initialBalance'),
+            riskTolerance: document.getElementById('riskTolerance'),
+            investmentHorizon: document.getElementById('investmentHorizon'),
+            optimizationStrategy: document.getElementById('optimizationStrategy'),
+            strategyDescription: document.getElementById('strategyDescription'),
+            assetSelection: document.getElementById('assetSelection'),
+
+            // Results
+            optimizationResults: document.getElementById('optimizationResults'),
+            currentAllocation: document.getElementById('currentAllocation'),
+            riskAlerts: document.getElementById('riskAlerts'),
+            aiRecommendations: document.getElementById('aiRecommendations'),
+            tradingSignals: document.getElementById('tradingSignals')
+        };
+
+        // Utility Functions
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatPercentage(value) {
+            return (value * 100).toFixed(2) + '%';
+        }
+
+        function formatNumber(value, decimals = 2) {
+            return Number(value).toFixed(decimals);
+        }
+
+        function showLoading(element, message = 'Loading...') {
+            element.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="loading-spinner mb-2"></div>
+                    <p class="mb-0 text-muted">${message}</p>
+                </div>
+            `;
+        }
+
+        function updateStatus(status, message) {
+            elements.apiStatus.className = `status-indicator status-${status}`;
+            elements.apiStatusText.textContent = message;
+            elements.connectionMessage.textContent = message;
+
+            if (status === 'connected') {
+                elements.connectionAlert.className = 'alert alert-success';
+                elements.connectionAlert.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                `;
+                isConnected = true;
+            } else if (status === 'error') {
+                elements.connectionAlert.className = 'alert alert-danger';
+                elements.connectionAlert.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                `;
+                isConnected = false;
+            } else {
+                elements.connectionAlert.className = 'alert alert-info';
+                elements.connectionAlert.innerHTML = `
+                    <i class="fas fa-wifi me-2"></i>
+                    ${message}
+                `;
+                isConnected = false;
+            }
+        }
+
+        function updateLastRefresh() {
+            elements.lastUpdate.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+        }
+
+        // API Functions
+        async function testConnection() {
+            updateStatus('loading', 'Testing API connection...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                updateStatus('connected', 'API Connected Successfully');
+                updateLastRefresh();
+
+                // Update service status in recommendations
+                await updateServiceStatus(data.services);
+
+                return true;
+
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                updateStatus('error', `Connection Failed: ${error.message}`);
+
+                // Show troubleshooting in recommendations
+                elements.aiRecommendations.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Connection Issue</h6>
+                        <p class="mb-2">Unable to connect to API server:</p>
+                        <small>${error.message}</small>
+                        <hr>
+                        <p class="mb-0"><strong>Troubleshooting:</strong></p>
+                        <ul class="mb-0">
+                            <li>Ensure API server is running on port 8000</li>
+                            <li>Check firewall settings</li>
+                            <li>Verify network connectivity</li>
+                        </ul>
+                    </div>
+                `;
+
+                return false;
+            }
+        }
+
+        async function updateServiceStatus(services) {
+            // Get real model status
+            let modelStatus = { model_loaded: false, status: 'offline' };
+            try {
+                const modelResponse = await fetch(`${API_BASE_URL}/model/status`);
+                if (modelResponse.ok) {
+                    modelStatus = await modelResponse.json();
+                }
+            } catch (error) {
+                console.error('Failed to get model status:', error);
+            }
+
+            // Create service list and replace RL_MODEL with real model status
+            const serviceEntries = Object.entries(services).filter(([service, status]) => service !== 'rl_model');
+            serviceEntries.push(['rl_model', modelStatus.model_loaded && modelStatus.status === 'online']);
+
+            const serviceList = serviceEntries
+                .map(([service, status]) => {
+                    const icon = status ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
+                    const statusText = status ? 'Online' : 'Offline';
+                    return `
+                        <div class="d-flex justify-content-between align-items-center py-1">
+                            <span>${service.replace('_', ' ').toUpperCase()}</span>
+                            <span><i class="${icon} me-1"></i>${statusText}</span>
+                        </div>
+                    `;
+                })
+                .join('');
+
+            // Show model performance if available
+            let modelInfo = '';
+            if (modelStatus.model_loaded && modelStatus.performance_metrics) {
+                const metrics = modelStatus.performance_metrics;
+                modelInfo = `
+                    <div class="mt-3 p-2 bg-light rounded">
+                        <small class="text-muted">
+                            <strong>Model Performance:</strong><br>
+                            Sharpe Ratio: ${metrics.sharpe_ratio || 0}<br>
+                            Episodes: ${(metrics.episodes || 0).toLocaleString()}<br>
+                            Version: ${modelStatus.model_version || 'N/A'}
+                        </small>
+                    </div>
+                `;
+            }
+
+            elements.aiRecommendations.innerHTML = `
+                <h6 class="mb-3">System Status</h6>
+                ${serviceList}
+                ${modelInfo}
+                <hr>
+                <div class="text-center">
+                    <i class="fas fa-robot text-primary fa-2x mb-2"></i>
+                    <p class="mb-0 text-muted">AI systems operational</p>
+                </div>
+            `;
+        }
+
+        // Initialize asset selection
+        function initializeAssetSelection() {
+            const assetHtml = availableAssets.map(asset => `
+                <div class="col-md-6 col-lg-4 mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${asset}" id="asset_${asset}"
+                               ${['GSPC', 'TLT', 'GLD', 'BTC_USD'].includes(asset) ? 'checked' : ''}>
+                        <label class="form-check-label" for="asset_${asset}">
+                            ${asset}
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+
+            elements.assetSelection.innerHTML = assetHtml;
+        }
+
+        // Portfolio Optimization
+        async function optimizePortfolio() {
+            if (!isConnected) {
+                alert('Please wait for API connection to be established.');
+                return;
+            }
+
+            showLoading(elements.optimizationResults, 'Optimizing portfolio with AI...');
+
+            try {
+                // Get selected assets
+                const selectedAssets = Array.from(document.querySelectorAll('#assetSelection input:checked'))
+                    .map(input => input.value);
+
+                if (selectedAssets.length === 0) {
+                    throw new Error('Please select at least one asset');
+                }
+
+                const requestData = {
+                    assets: selectedAssets,
+                    investment_amount: parseInt(elements.initialBalance.value),
+                    risk_tolerance: elements.riskTolerance.value,
+                    strategy: elements.optimizationStrategy.value
+                };
+
+                console.log('Optimization request:', requestData);
+
+                const response = await fetch(`${API_BASE_URL}/portfolio/optimize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Optimization failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Optimization response:', data);
+
+                if (data.success) {
+                    console.log('Optimization successful, updating UI...');
+                    displayOptimizationResults(data);
+                    updatePortfolioMetrics(data);
+                    updateCurrentAllocation(data.weights);
+                    currentPortfolio = data;
+
+                    console.log('Current portfolio set to:', currentPortfolio);
+                    console.log('Portfolio weights:', currentPortfolio.weights);
+
+                    // Update performance chart with new portfolio data
+                    setTimeout(() => {
+                        console.log('Updating chart with optimized portfolio...');
+                        generateRealChartData();
+                    }, 100);
+
+                    console.log('UI update completed');
+                } else {
+                    throw new Error('Optimization failed');
+                }
+
+            } catch (error) {
+                console.error('Optimization error:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    requestData: requestData
+                });
+                elements.optimizationResults.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Optimization Failed</h6>
+                        <p class="mb-0">${error.message}</p>
+                        <small class="text-muted">Check browser console for details</small>
+                    </div>
+                `;
+            }
+        }
+
+        function displayOptimizationResults(data) {
+            const weights = data.weights || {};
+            const recommendations = data.recommendations || [];
+
+            // Create allocation chart data
+            const allocations = Object.entries(weights)
+                .filter(([asset, weight]) => weight > 0.001)
+                .sort((a, b) => b[1] - a[1]);
+
+            let resultsHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Recommended Allocation</h6>
+                        <div class="allocation-list">
+            `;
+
+            allocations.forEach(([asset, weight]) => {
+                const percentage = (weight * 100).toFixed(1);
+                resultsHtml += `
+                    <div class="allocation-item">
+                        <div>
+                            <strong>${asset}</strong>
+                            <div class="allocation-bar">
+                                <div class="allocation-fill" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                        <span class="fw-bold">${percentage}%</span>
+                    </div>
+                `;
+            });
+
+            resultsHtml += `
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Performance Metrics</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="h5 mb-1 text-primary">${formatPercentage(data.expected_return || 0)}</div>
+                                    <small class="text-muted">Expected Return</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="h5 mb-1 text-success">${formatNumber(data.sharpe_ratio || 0)}</div>
+                                    <small class="text-muted">Sharpe Ratio</small>
+                                </div>
+                            </div>
+                        </div>
+            `;
+
+            if (recommendations.length > 0) {
+                resultsHtml += `
+                        <h6 class="mt-3 mb-2">AI Recommendations</h6>
+                        <ul class="list-unstyled">
+                `;
+                recommendations.forEach(rec => {
+                    resultsHtml += `<li class="mb-1"><i class="fas fa-lightbulb text-warning me-2"></i>${rec}</li>`;
+                });
+                resultsHtml += '</ul>';
+            }
+
+            resultsHtml += `
+                    </div>
+                </div>
+            `;
+
+            elements.optimizationResults.innerHTML = resultsHtml;
+        }
+
+        function updatePortfolioMetrics(data) {
+            const initialBalance = parseInt(elements.initialBalance.value);
+
+            elements.totalValue.textContent = formatCurrency(initialBalance);
+            elements.totalReturn.textContent = formatPercentage(data.expected_return || 0);
+            elements.sharpeRatio.textContent = formatNumber(data.sharpe_ratio || 0);
+            elements.maxDrawdown.textContent = formatPercentage(data.risk_metrics?.max_drawdown || 0);
+        }
+
+        function updateCurrentAllocation(weights) {
+            const allocations = Object.entries(weights)
+                .filter(([asset, weight]) => weight > 0.001)
+                .sort((a, b) => b[1] - a[1]);
+
+            if (allocations.length === 0) {
+                elements.currentAllocation.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-chart-pie fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0">No allocation data</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let allocationHtml = '';
+            allocations.forEach(([asset, weight]) => {
+                const percentage = (weight * 100).toFixed(1);
+                allocationHtml += `
+                    <div class="allocation-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-medium">${asset}</span>
+                            <span class="fw-bold">${percentage}%</span>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            elements.currentAllocation.innerHTML = allocationHtml;
+        }
+
+        // Trading Signals
+        async function getTradingSignals() {
+            if (!isConnected) {
+                alert('Please wait for API connection to be established.');
+                return;
+            }
+
+            showLoading(elements.tradingSignals, 'Generating AI trading signals...');
+
+            try {
+                const selectedAssets = Array.from(document.querySelectorAll('#assetSelection input:checked'))
+                    .map(input => input.value);
+
+                if (selectedAssets.length === 0) {
+                    throw new Error('Please select assets first');
+                }
+
+                // Create current weights (equal weight for demo)
+                const currentWeights = {};
+                selectedAssets.forEach(asset => {
+                    currentWeights[asset] = 1 / selectedAssets.length;
+                });
+
+                const requestData = {
+                    assets: selectedAssets,
+                    current_weights: currentWeights
+                };
+
+                const response = await fetch(`${API_BASE_URL}/trading/signals`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Signals request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTradingSignals(data);
+                } else {
+                    throw new Error('Signal generation failed');
+                }
+
+            } catch (error) {
+                console.error('Trading signals error:', error);
+                elements.tradingSignals.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Signal Generation Failed</h6>
+                        <p class="mb-0">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayTradingSignals(data) {
+            const signals = data.signals || [];
+
+            let signalsHtml = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Asset</th>
+                                <th>Signal</th>
+                                <th>Confidence</th>
+                                <th>Current Price</th>
+                                <th>Target Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            signals.forEach(signalData => {
+                const asset = signalData.asset;
+                const signal = signalData.signal;
+                const conf = (signalData.confidence * 100).toFixed(0);
+                const currentPrice = signalData.current_price?.toFixed(2) || 'N/A';
+                const targetPrice = signalData.target_price?.toFixed(2) || 'N/A';
+
+                let signalClass = 'secondary';
+                let signalIcon = 'fas fa-minus';
+
+                if (signal === 'BUY') {
+                    signalClass = 'success';
+                    signalIcon = 'fas fa-arrow-up';
+                } else if (signal === 'SELL') {
+                    signalClass = 'danger';
+                    signalIcon = 'fas fa-arrow-down';
+                }
+
+                signalsHtml += `
+                    <tr>
+                        <td><strong>${asset}</strong></td>
+                        <td>
+                            <span class="badge bg-${signalClass}">
+                                <i class="${signalIcon} me-1"></i>${signal}
+                            </span>
+                        </td>
+                        <td>${conf}%</td>
+                        <td>$${currentPrice}</td>
+                        <td>$${targetPrice}</td>
+                    </tr>
+                `;
+            });
+
+            signalsHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Add market sentiment if available
+            if (data.market_sentiment) {
+                signalsHtml += `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-chart-line me-2"></i>Market Sentiment</h6>
+                        <span class="badge bg-info">${data.market_sentiment}</span>
+                    </div>
+                `;
+            }
+
+            // Add reasoning from individual signals
+            const allReasons = signals.map(s => s.reasoning).filter(r => r);
+            if (allReasons.length > 0) {
+                signalsHtml += `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-brain me-2"></i>AI Analysis</h6>
+                        <ul class="list-unstyled">
+                `;
+                allReasons.forEach(reason => {
+                    signalsHtml += `<li class="mb-1"><i class="fas fa-lightbulb text-warning me-2"></i>${reason}</li>`;
+                });
+                signalsHtml += '</ul></div>';
+            }
+
+            elements.tradingSignals.innerHTML = signalsHtml;
+        }
+
+        // Risk Analysis
+        async function analyzeRisk() {
+            if (!isConnected || !currentPortfolio) {
+                return;
+            }
+
+            try {
+                const requestData = {
+                    portfolio_weights: currentPortfolio.portfolio_weights,
+                    confidence_levels: [0.95, 0.99],
+                    stress_test: true
+                };
+
+                const response = await fetch(`${API_BASE_URL}/risk/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Risk analysis failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayRiskAlerts(data);
+                }
+
+            } catch (error) {
+                console.error('Risk analysis error:', error);
+            }
+        }
+
+        function displayRiskAlerts(data) {
+            const alerts = data.risk_alerts || [];
+            const riskScore = data.risk_score || 0;
+
+            if (alerts.length === 0) {
+                elements.riskAlerts.innerHTML = `
+                    <div class="text-center text-success py-3">
+                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                        <p class="mb-1"><strong>No Active Alerts</strong></p>
+                        <small class="text-muted">Risk Score: ${riskScore.toFixed(0)}/100</small>
+                    </div>
+                `;
+                return;
+            }
+
+            let alertsHtml = `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Risk Score</span>
+                        <span class="fw-bold">${riskScore.toFixed(0)}/100</span>
+                    </div>
+                </div>
+                <hr>
+            `;
+
+            alerts.forEach(alert => {
+                let alertClass = 'warning';
+                if (alert.severity === 'HIGH' || alert.severity === 'CRITICAL') {
+                    alertClass = 'danger';
+                }
+
+                alertsHtml += `
+                    <div class="alert alert-${alertClass} alert-sm mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${alert.alert_type}</strong>
+                                <p class="mb-0 small">${alert.message}</p>
+                            </div>
+                            <span class="badge bg-${alertClass}">${alert.severity}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            elements.riskAlerts.innerHTML = alertsHtml;
+        }
+
+        // Chart Functions
+        function initializePerformanceChart() {
+            console.log('🔧 Starting chart initialization...');
+
+            const canvas = document.getElementById('performanceChart');
+            if (!canvas) {
+                console.error('❌ Performance chart canvas not found!');
+                return;
+            }
+
+            console.log('✅ Canvas element found:', canvas);
+            console.log('Canvas dimensions:', canvas.offsetWidth, 'x', canvas.offsetHeight);
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('❌ Could not get 2D context from canvas!');
+                return;
+            }
+
+            console.log('✅ 2D context obtained');
+
+            // Check if Chart.js is available
+            if (typeof Chart === 'undefined') {
+                console.error('❌ Chart.js is not loaded!');
+                return;
+            }
+
+            console.log('✅ Chart.js is available, version:', Chart.version);
+
+            try {
+                performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'AI Portfolio',
+                        data: [],
+                        borderColor: 'rgb(37, 99, 235)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4
+                    }, {
+                        label: 'S&P 500',
+                        data: [],
+                        borderColor: 'rgb(156, 163, 175)',
+                        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    const label = context.dataset.label;
+                                    return `${label}: $${value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            console.log('✅ Performance chart object created');
+            console.log('Chart instance:', performanceChart);
+            console.log('Chart canvas:', performanceChart.canvas);
+            console.log('Chart datasets:', performanceChart.data.datasets.length);
+
+            // Force chart to render
+            try {
+                performanceChart.render();
+                console.log('✅ Chart render() called successfully');
+            } catch (error) {
+                console.error('❌ Chart render() failed:', error);
+            }
+
+            // Generate initial sample data to make chart visible
+            setTimeout(() => {
+                console.log('🔧 Generating sample data after delay...');
+                generateSampleChartData();
+            }, 100);
+
+            } catch (error) {
+                console.error('❌ Failed to create chart:', error);
+
+                // Fallback: Create a simple chart
+                try {
+                    console.log('🔧 Attempting fallback chart creation...');
+                    performanceChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                            datasets: [{
+                                label: 'Portfolio',
+                                data: [100000, 102000, 98000, 105000, 107000],
+                                borderColor: 'rgb(37, 99, 235)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    console.log('✅ Fallback chart created successfully');
+                } catch (fallbackError) {
+                    console.error('❌ Fallback chart creation also failed:', fallbackError);
+
+                    // Last resort: Show error message in chart container
+                    const chartContainer = document.querySelector('.chart-container');
+                    if (chartContainer) {
+                        chartContainer.innerHTML = `
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                    <p>Chart initialization failed</p>
+                                    <small>Check browser console for details</small>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+
+        async function generateRealChartData(timeframe = '1M') {
+            console.log('🔧 generateRealChartData called with timeframe:', timeframe);
+            console.log('isConnected:', isConnected);
+            console.log('currentPortfolio:', currentPortfolio);
+
+            if (!isConnected || !currentPortfolio) {
+                console.log('⚠️ No connection or portfolio, using sample data');
+                // Fallback to sample data if no portfolio data
+                generateSampleChartData();
+                return;
+            }
+
+            try {
+                const requestData = {
+                    portfolio_weights: currentPortfolio.weights,
+                    initial_balance: parseInt(elements.initialBalance.value),
+                    timeframe: timeframe
+                };
+
+                console.log('📊 Requesting performance data with:', requestData);
+
+                const response = await fetch(`${API_BASE_URL}/portfolio/performance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📈 Performance data received:', data);
+
+                    if (data.success && data.performance_data) {
+                        const perfData = data.performance_data;
+
+                        console.log('📊 Portfolio values:', perfData.portfolio_values?.length, 'points');
+                        console.log('📊 S&P 500 values:', perfData.sp500_values?.length, 'points');
+                        console.log('📅 Date range:', perfData.dates?.[0], 'to', perfData.dates?.[perfData.dates?.length - 1]);
+
+                        // Format dates for chart
+                        const labels = perfData.dates.map(dateStr => {
+                            const date = new Date(dateStr);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        });
+
+                        // Update chart with real data
+                        if (performanceChart) {
+                            performanceChart.data.labels = labels;
+                            performanceChart.data.datasets[0].data = perfData.portfolio_values;
+                            performanceChart.data.datasets[1].data = perfData.sp500_values;
+
+                            performanceChart.update('active');
+                            console.log('✅ Chart updated with real portfolio data');
+
+                            // Update chart status
+                            const chartStatus = document.getElementById('chartStatus');
+                            if (chartStatus) {
+                                chartStatus.innerHTML = '<small class="text-success">Chart updated with optimized portfolio</small>';
+                            }
+                        } else {
+                            console.error('❌ Performance chart not available');
+                        }
+
+                        // Update performance metrics display
+                        updatePerformanceMetrics(data.summary);
+                    } else {
+                        console.error('Invalid performance data format');
+                        generateSampleChartData();
+                    }
+
+                } else {
+                    console.error('Failed to fetch performance data');
+                    generateSampleChartData();
+                }
+            } catch (error) {
+                console.error('Error fetching performance data:', error);
+                generateSampleChartData();
+            }
+        }
+
+        function generateSampleChartData() {
+            if (!performanceChart) {
+                console.error('Performance chart not initialized!');
+                return;
+            }
+
+            console.log('Generating sample chart data...');
+
+            const now = new Date();
+            const portfolioData = [];
+            const sp500Data = [];
+            const labels = [];
+            let portfolioValue = 100000;
+            let sp500Value = 100000;
+
+            for (let i = 30; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+
+                // Portfolio performance (slightly better)
+                const portfolioChange = (Math.random() - 0.45) * 0.02; // Slight positive bias
+                portfolioValue *= (1 + portfolioChange);
+
+                // S&P 500 performance
+                const sp500Change = (Math.random() - 0.5) * 0.018; // Market performance
+                sp500Value *= (1 + sp500Change);
+
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                portfolioData.push(portfolioValue);
+                sp500Data.push(sp500Value);
+            }
+
+            console.log(`Generated ${labels.length} data points`);
+            console.log(`Portfolio range: $${Math.min(...portfolioData).toFixed(0)} - $${Math.max(...portfolioData).toFixed(0)}`);
+            console.log(`S&P 500 range: $${Math.min(...sp500Data).toFixed(0)} - $${Math.max(...sp500Data).toFixed(0)}`);
+
+            performanceChart.data.labels = labels;
+            performanceChart.data.datasets[0].data = portfolioData;
+            performanceChart.data.datasets[1].data = sp500Data;
+            performanceChart.update();
+
+            console.log('✅ Sample chart data generated and chart updated');
+        }
+
+        // Manual chart test function (can be called from browser console)
+        function testChart() {
+            console.log('🧪 Manual chart test started...');
+
+            const canvas = document.getElementById('performanceChart');
+            console.log('Canvas element:', canvas);
+            console.log('Canvas visible:', canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0);
+
+            if (performanceChart) {
+                console.log('Chart instance exists:', performanceChart);
+                console.log('Chart data:', performanceChart.data);
+                console.log('Chart datasets:', performanceChart.data.datasets.length);
+
+                // Force update
+                performanceChart.update('active');
+                console.log('Chart update called');
+            } else {
+                console.log('No chart instance found, attempting to create...');
+                initializePerformanceChart();
+            }
+        }
+
+        // Make testChart available globally for debugging
+        window.testChart = testChart;
+
+        // Simple chart creation function that should always work
+        function createSimpleChart() {
+            console.log('🔧 Creating simple chart as fallback...');
+
+            const canvas = document.getElementById('performanceChart');
+            const status = document.getElementById('chartStatus');
+
+            if (!canvas) {
+                console.error('Canvas not found');
+                if (status) status.innerHTML = '<small class="text-danger">Canvas not found</small>';
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                if (status) status.innerHTML = '<small class="text-danger">Chart.js not loaded</small>';
+                return;
+            }
+
+            try {
+                const ctx = canvas.getContext('2d');
+
+                // Destroy existing chart if any
+                if (performanceChart) {
+                    performanceChart.destroy();
+                }
+
+                // Create simple chart with hardcoded data
+                performanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Portfolio Value',
+                            data: [100000, 102000, 98000, 105000],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }, {
+                            label: 'S&P 500',
+                            data: [100000, 101000, 99000, 103000],
+                            borderColor: '#9ca3af',
+                            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                console.log('✅ Simple chart created successfully');
+                if (status) status.innerHTML = '<small class="text-success">Chart loaded successfully</small>';
+
+                return true;
+            } catch (error) {
+                console.error('Failed to create simple chart:', error);
+                if (status) status.innerHTML = '<small class="text-danger">Chart creation failed: ' + error.message + '</small>';
+                return false;
+            }
+        }
+
+        // Make createSimpleChart available globally
+        window.createSimpleChart = createSimpleChart;
+
+        function updatePerformanceMetrics(summary) {
+            // Update the key metrics with real performance data
+            if (summary && summary.portfolio) {
+                const portfolio = summary.portfolio;
+                const sp500 = summary.sp500;
+
+                // Update portfolio metrics
+                if (portfolio.total_return !== undefined) {
+                    elements.totalReturn.textContent = formatPercentage(portfolio.total_return);
+                    elements.totalReturn.className = portfolio.total_return >= 0 ? 'metric-value text-success' : 'metric-value text-danger';
+                }
+
+                if (portfolio.sharpe_ratio !== undefined) {
+                    elements.sharpeRatio.textContent = formatNumber(portfolio.sharpe_ratio);
+                }
+
+                if (portfolio.max_drawdown !== undefined) {
+                    elements.maxDrawdown.textContent = formatPercentage(portfolio.max_drawdown);
+                }
+
+                // Show alpha vs S&P 500 if available
+                if (summary.alpha !== undefined) {
+                    const alphaElement = document.getElementById('alphaMetric');
+                    if (alphaElement) {
+                        alphaElement.textContent = formatPercentage(summary.alpha);
+                        alphaElement.className = summary.alpha >= 0 ? 'text-success' : 'text-danger';
+                    }
+                }
+
+                console.log('Performance metrics updated:', {
+                    portfolio_return: portfolio.total_return,
+                    sp500_return: sp500?.total_return,
+                    alpha: summary.alpha
+                });
+            }
+        }
+
+        function changeTimeframe(timeframe) {
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Generate new data based on timeframe using real API data
+            generateRealChartData(timeframe);
+        }
+
+        // Refresh Functions
+        async function refreshData() {
+            elements.refreshIcon.style.animation = 'spin 1s linear infinite';
+
+            try {
+                await testConnection();
+
+                if (isConnected) {
+                    if (currentPortfolio) {
+                        await analyzeRisk();
+                    }
+                }
+            } finally {
+                elements.refreshIcon.style.animation = '';
+            }
+        }
+
+        // Auto-refresh
+        function startAutoRefresh() {
+            setInterval(async () => {
+                if (isConnected) {
+                    await refreshData();
+                }
+            }, 30000); // Refresh every 30 seconds
+        }
+
+        // Strategy descriptions
+        const strategyDescriptions = {
+            'rl_ppo': '🤖 AI-powered optimization using reinforcement learning - adapts to all market conditions',
+            'mean_reversion': '📈 Exploits price reversions to historical means - best for volatile markets',
+            'momentum': '🚀 Captures sustained trending movements - best for trending markets',
+            'risk_parity': '⚖️ Equal risk contribution from all assets - best for balanced portfolios'
+        };
+
+        // Update strategy description
+        function updateStrategyDescription() {
+            const strategy = elements.optimizationStrategy.value;
+            elements.strategyDescription.textContent = strategyDescriptions[strategy] || '';
+        }
+
+        // Initialize Dashboard
+        async function initializeDashboard() {
+            console.log('Initializing Portfolio Dashboard...');
+
+            // Initialize components
+            initializeAssetSelection();
+
+            // Try to initialize chart, fallback to simple chart if needed
+            try {
+                initializePerformanceChart();
+            } catch (error) {
+                console.error('Main chart initialization failed, trying simple chart:', error);
+                setTimeout(() => {
+                    createSimpleChart();
+                }, 1000);
+            }
+
+            // Set up strategy description updates
+            if (elements.optimizationStrategy) {
+                elements.optimizationStrategy.addEventListener('change', updateStrategyDescription);
+                updateStrategyDescription();
+            }
+
+            // Test API connection
+            await testConnection();
+
+            // Start auto-refresh
+            startAutoRefresh();
+
+            console.log('Dashboard initialized successfully');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+        // Global functions for button clicks
+        window.optimizePortfolio = optimizePortfolio;
+        window.getTradingSignals = getTradingSignals;
+        window.refreshData = refreshData;
+        window.changeTimeframe = changeTimeframe;
+    </script>
+</body>
+</html>

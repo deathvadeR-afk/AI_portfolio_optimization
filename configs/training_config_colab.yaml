@@ -1,0 +1,199 @@
+# Google Colab Training Configuration
+# Optimized for GPU training with extended parameters to reach 670K+ model size
+
+training:
+  # Training parameters
+  total_timesteps: 1000000
+  learning_rate: 3e-4
+  batch_size: 64
+  n_epochs: 10
+  clip_range: 0.2
+  gamma: 0.99
+  gae_lambda: 0.95
+  value_coef: 0.5
+  entropy_coef: 0.01
+  
+  # Training schedule
+  learning_rate_schedule: "linear"  # linear decay
+  clip_range_schedule: "constant"
+  
+  # Optimization
+  optimizer: "adam"
+  max_grad_norm: 0.5
+  
+  # Logging and checkpointing
+  log_interval: 100
+  save_interval: 1000
+  eval_interval: 5000
+  
+  # Early stopping
+  patience: 50000  # Stop if no improvement for 50k steps
+  min_improvement: 0.01
+
+environment:
+  # Market environment settings
+  lookback_window: 60  # Days of historical data
+  rebalance_frequency: 5  # Rebalance every 5 days
+  transaction_cost: 0.001  # 0.1% transaction cost
+  initial_balance: 100000
+  
+  # Risk management
+  max_position_size: 0.4  # Maximum 40% in single asset
+  min_position_size: 0.0  # Allow zero positions
+  leverage_limit: 1.0  # No leverage
+  
+  # Data settings
+  start_date: "2015-01-01"
+  end_date: "2024-12-31"
+  validation_split: 0.2
+  
+  # Features
+  technical_indicators: true
+  economic_features: true
+  sentiment_features: false  # Disable for Colab simplicity
+
+model:
+  # Network architecture (designed for 670K+ parameters)
+  hidden_dim: 512  # Increased from 256
+  num_layers: 4    # Deeper network
+  dropout_rate: 0.2
+  activation: "relu"
+  
+  # Input/output dimensions
+  obs_dim: 80  # 10 features per asset * 8 assets
+  action_dim: 8  # Portfolio weights for 8 assets
+  
+  # Architecture details
+  shared_layers: 3
+  actor_layers: 2
+  critic_layers: 2
+  
+  # Regularization
+  l2_regularization: 1e-4
+  batch_normalization: false
+  layer_normalization: true
+
+assets:
+  # Asset universe for training
+  symbols:
+    - "SPY"   # S&P 500
+    - "QQQ"   # NASDAQ 100
+    - "IWM"   # Russell 2000
+    - "TLT"   # 20+ Year Treasury
+    - "GLD"   # Gold
+    - "VNQ"   # Real Estate
+    - "EFA"   # International Developed
+    - "EEM"   # Emerging Markets
+  
+  # Asset categories
+  categories:
+    equity: ["SPY", "QQQ", "IWM", "EFA", "EEM"]
+    fixed_income: ["TLT"]
+    commodities: ["GLD"]
+    real_estate: ["VNQ"]
+
+features:
+  # Technical indicators
+  technical:
+    - "returns_1d"
+    - "returns_5d"
+    - "returns_20d"
+    - "volatility_20d"
+    - "rsi_14"
+    - "macd"
+    - "bollinger_position"
+    - "volume_ratio"
+    - "momentum_12_1"
+    - "mean_reversion"
+  
+  # Risk metrics
+  risk:
+    - "var_95"
+    - "cvar_95"
+    - "max_drawdown"
+    - "sharpe_ratio"
+    - "sortino_ratio"
+  
+  # Market regime
+  regime:
+    - "volatility_regime"
+    - "trend_regime"
+    - "correlation_regime"
+
+rewards:
+  # Reward function components
+  return_weight: 1.0
+  risk_weight: 0.5
+  transaction_cost_weight: 0.1
+  diversification_weight: 0.2
+  
+  # Risk-adjusted returns
+  use_sharpe_ratio: true
+  use_sortino_ratio: false
+  risk_free_rate: 0.02
+  
+  # Penalties
+  concentration_penalty: 0.1
+  turnover_penalty: 0.05
+
+colab:
+  # Colab-specific settings
+  use_gpu: true
+  mixed_precision: true
+  
+  # Google Drive integration
+  drive_mount_path: "/content/drive"
+  model_save_path: "/content/drive/MyDrive/AI_Portfolio_Models"
+  log_save_path: "/content/drive/MyDrive/AI_Portfolio_Training_Logs"
+  
+  # Memory management
+  gradient_checkpointing: true
+  dataloader_num_workers: 2
+  pin_memory: true
+  
+  # Monitoring
+  use_tensorboard: true
+  use_wandb: false  # Set to true if you have wandb account
+  
+  # Session management
+  max_training_hours: 6  # Maximum training time
+  auto_save_interval: 30  # Save every 30 minutes
+  
+# Validation and testing
+validation:
+  # Validation settings
+  validation_episodes: 100
+  validation_frequency: 10000  # Every 10k training steps
+  
+  # Performance metrics
+  benchmark_assets: ["SPY"]  # Compare against S&P 500
+  performance_window: 252    # 1 year rolling window
+  
+  # Risk metrics
+  var_confidence: 0.95
+  cvar_confidence: 0.95
+  max_drawdown_threshold: 0.2
+
+# Hyperparameter optimization (optional)
+hyperopt:
+  enabled: false
+  n_trials: 50
+  
+  # Parameter ranges
+  learning_rate_range: [1e-5, 1e-3]
+  hidden_dim_range: [256, 1024]
+  batch_size_range: [32, 128]
+  
+  # Optimization objective
+  objective: "sharpe_ratio"  # or "total_return", "calmar_ratio"
+
+# Deployment settings
+deployment:
+  # Model export
+  export_format: "pytorch"  # or "onnx", "torchscript"
+  quantization: false
+  
+  # Integration
+  api_integration: true
+  model_name: "ppo_portfolio_agent_colab"
+  version: "1.0.0"

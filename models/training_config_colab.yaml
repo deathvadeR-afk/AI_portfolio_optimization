@@ -1,0 +1,26 @@
+# Training Configuration for Colab-trained Model
+# This file provides the model architecture details for integration
+
+model:
+  obs_dim: 80        # 10 features per asset × 8 assets
+  action_dim: 8      # Portfolio weights for 8 assets
+  hidden_dim: 512    # Hidden layer dimension for 670K+ parameters
+
+training:
+  total_episodes: 2000
+  learning_rate: 3e-4
+  batch_size: 64
+  
+assets:
+  - "SPY"   # S&P 500
+  - "QQQ"   # NASDAQ 100
+  - "IWM"   # Russell 2000
+  - "TLT"   # 20+ Year Treasury
+  - "GLD"   # Gold
+  - "VNQ"   # Real Estate
+  - "EFA"   # International Developed
+  - "EEM"   # Emerging Markets
+
+training_completed: true
+model_type: "incremental_ppo"
+colab_trained: true

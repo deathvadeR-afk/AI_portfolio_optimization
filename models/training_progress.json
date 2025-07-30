@@ -1,0 +1,109 @@
+{
+  "total_episodes": 2000,
+  "total_sessions": 20,
+  "best_sharpe": 11.744248173581722,
+  "last_checkpoint": "/content/drive/MyDrive/AI_Portfolio_Models/checkpoints/latest_checkpoint.pth",
+  "target_episodes": 2000,
+  "sessions_completed": [
+    {
+      "session_id": "20250730_043440",
+      "episodes": 100,
+      "final_sharpe": -0.11383380032456615
+    },
+    {
+      "session_id": "20250730_043440",
+      "episodes": 100,
+      "final_sharpe": 2.289422827786071
+    },
+    {
+      "session_id": "20250730_043440",
+      "episodes": 100,
+      "final_sharpe": 10.6857016974771
+    },
+    {
+      "session_id": "20250730_043440",
+      "episodes": 100,
+      "final_sharpe": 3.6601788512847904
+    },
+    {
+      "session_id": "20250730_043440",
+      "episodes": 100,
+      "final_sharpe": 0.15409711586967326
+    },
+    {
+      "session_id": "20250730_044140",
+      "episodes": 100,
+      "final_sharpe": -2.4880005072828975
+    },
+    {
+      "session_id": "20250730_044436",
+      "episodes": 100,
+      "final_sharpe": -0.6659303490629399
+    },
+    {
+      "session_id": "20250730_044607",
+      "episodes": 100,
+      "final_sharpe": 0.08189323966347328
+    },
+    {
+      "session_id": "20250730_044643",
+      "episodes": 100,
+      "final_sharpe": -1.707982084764002
+    },
+    {
+      "session_id": "20250730_044756",
+      "episodes": 100,
+      "final_sharpe": -2.2195141452934375
+    },
+    {
+      "session_id": "20250730_044852",
+      "episodes": 100,
+      "final_sharpe": 5.503419350767524
+    },
+    {
+      "session_id": "20250730_044935",
+      "episodes": 100,
+      "final_sharpe": -0.024764932402558795
+    },
+    {
+      "session_id": "20250730_045002",
+      "episodes": 100,
+      "final_sharpe": -0.2595474062719664
+    },
+    {
+      "session_id": "20250730_045203",
+      "episodes": 100,
+      "final_sharpe": -2.168141511302395
+    },
+    {
+      "session_id": "20250730_045241",
+      "episodes": 100,
+      "final_sharpe": 3.077655283600018
+    },
+    {
+      "session_id": "20250730_045329",
+      "episodes": 100,
+      "final_sharpe": 5.812864413698497
+    },
+    {
+      "session_id": "20250730_045432",
+      "episodes": 100,
+      "final_sharpe": 2.4146968064189447
+    },
+    {
+      "session_id": "20250730_045510",
+      "episodes": 100,
+      "final_sharpe": 1.6794111570299979
+    },
+    {
+      "session_id": "20250730_045556",
+      "episodes": 100,
+      "final_sharpe": -7.803840519185512
+    },
+    {
+      "session_id": "20250730_045624",
+      "episodes": 100,
+      "final_sharpe": -0.32546545994675574
+    }
+  ]
+}

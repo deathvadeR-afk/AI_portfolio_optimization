@@ -1,0 +1,193 @@
+# Data Collection Configuration
+
+# Market Data Sources
+market_data:
+  # Equity indices
+  equity_indices:
+    - "^GSPC"    # S&P 500
+    - "^IXIC"    # NASDAQ
+    - "^DJI"     # Dow Jones
+    - "^RUT"     # Russell 2000
+    - "EFA"      # MSCI EAFE (International)
+    - "EEM"      # MSCI Emerging Markets
+  
+  # Fixed Income
+  fixed_income:
+    - "TLT"      # 20+ Year Treasury Bond
+    - "IEF"      # 7-10 Year Treasury Bond
+    - "SHY"      # 1-3 Year Treasury Bond
+    - "LQD"      # Investment Grade Corporate Bond
+    - "HYG"      # High Yield Corporate Bond
+    - "TIPS"     # Treasury Inflation-Protected Securities
+  
+  # Commodities
+  commodities:
+    - "GLD"      # Gold
+    - "SLV"      # Silver
+    - "USO"      # Oil
+    - "UNG"      # Natural Gas
+    - "DBA"      # Agriculture
+  
+  # Alternative Assets
+  alternatives:
+    - "VNQ"      # Real Estate (REITs)
+    - "BTC-USD"  # Bitcoin
+    - "ETH-USD"  # Ethereum
+
+# Economic Indicators (FRED API)
+economic_data:
+  interest_rates:
+    - "DGS10"    # 10-Year Treasury Rate
+    - "DGS2"     # 2-Year Treasury Rate
+    - "FEDFUNDS" # Federal Funds Rate
+    - "DGS3MO"   # 3-Month Treasury Rate
+  
+  inflation:
+    - "CPIAUCSL" # Consumer Price Index
+    - "CPILFESL" # Core CPI
+    - "PCEPI"    # PCE Price Index
+    - "T5YIE"    # 5-Year Breakeven Inflation Rate
+  
+  economic_growth:
+    - "GDP"      # Gross Domestic Product
+    - "UNRATE"   # Unemployment Rate
+    - "PAYEMS"   # Nonfarm Payrolls
+    - "INDPRO"   # Industrial Production
+  
+  market_sentiment:
+    - "VIXCLS"   # VIX Volatility Index
+
+# Data Collection Settings
+collection:
+  # Data frequency
+  frequency: "1d"  # daily data
+  
+  # Historical data period
+  lookback_period: "5y"  # 5 years of historical data
+  
+  # Update frequency
+  update_frequency: "daily"  # how often to update data
+  
+  # Data validation
+  validation:
+    max_missing_days: 5      # maximum consecutive missing days allowed
+    min_data_points: 252     # minimum data points required (1 year)
+    outlier_threshold: 5     # standard deviations for outlier detection
+  
+  # API settings
+  api_settings:
+    yahoo_finance:
+      timeout: 30
+      retry_attempts: 3
+      retry_delay: 1
+    
+    fred:
+      timeout: 30
+      retry_attempts: 3
+      retry_delay: 1
+
+# Data Storage
+storage:
+  # Storage format
+  format: "parquet"  # parquet, hdf5, csv
+  
+  # Storage paths
+  paths:
+    raw_data: "data/raw"
+    processed_data: "data/processed"
+    features: "data/features"
+  
+  # Compression
+  compression: "snappy"
+  
+  # Backup settings
+  backup:
+    enabled: true
+    frequency: "weekly"
+    retention_days: 90
+
+# Feature Engineering
+features:
+  # Technical indicators
+  technical:
+    # Moving averages
+    moving_averages:
+      - 5
+      - 10
+      - 20
+      - 50
+      - 200
+    
+    # RSI periods
+    rsi_periods:
+      - 14
+      - 30
+    
+    # Bollinger Bands
+    bollinger_bands:
+      period: 20
+      std_dev: 2
+    
+    # MACD
+    macd:
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+  
+  # Risk metrics
+  risk:
+    # Volatility windows
+    volatility_windows:
+      - 10
+      - 30
+      - 60
+      - 252
+    
+    # VaR confidence levels
+    var_confidence_levels:
+      - 0.95
+      - 0.99
+    
+    # Expected Shortfall
+    expected_shortfall:
+      confidence_level: 0.95
+      window: 252
+  
+  # Cross-asset features
+  cross_asset:
+    # Correlation windows
+    correlation_windows:
+      - 30
+      - 60
+      - 252
+    
+    # Momentum periods
+    momentum_periods:
+      - 1
+      - 5
+      - 10
+      - 20
+    
+    # Mean reversion
+    mean_reversion:
+      lookback_period: 20
+      threshold: 2.0
+
+# Data Quality
+quality_checks:
+  # Price data validation
+  price_validation:
+    min_price: 0.01
+    max_daily_return: 0.5    # 50% maximum daily return
+    min_volume: 1000         # minimum daily volume
+  
+  # Missing data handling
+  missing_data:
+    method: "forward_fill"   # forward_fill, interpolate, drop
+    max_consecutive: 5       # maximum consecutive missing values
+  
+  # Outlier detection
+  outlier_detection:
+    method: "z_score"        # z_score, iqr, isolation_forest
+    threshold: 3.0
+    action: "cap"            # cap, remove, flag
